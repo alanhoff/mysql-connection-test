@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const fs  = require('fs');
 
 // Edit your connection info
 // More info on SSL: https://github.com/sidorares/node-mysql2/blob/07a429d9765dcbb24af4264654e973847236e0de/documentation/Examples.md#connecting-over-encrypted-connection
@@ -20,7 +21,14 @@ const SSL = 'Amazon RDS';
     ssl: SSL
   });
 
-  await connection.execute('SELECT 1 + 1;');
+  if (typeof SSL !== 'undefined' && SSL) {
+    const [rows] = await connection.query("show status");
+    const version = rows.find(row => row.Variable_name === 'Ssl_version');
+    const cipher = rows.find(row => row.Variable_name === 'Ssl_cipher')
+    console.log('Using TLS: %s cipher: %s', version.Value, cipher.Value);
+  }
+
+  await connection.execute('select 1 + 1;');
   await connection.end();
 
   console.log('Connected')
